@@ -287,19 +287,19 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
 
         while 1:
             try:
-                print ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER
+                if (not args.quiet) : print ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER
+                if (not args.quiet) : print myinput.read(), ansi.ENDC
                 myinput.seek(0)
-                print myinput.read(), ansi.ENDC
                 out  = check_output([diffProgram]+diffFlags+[myoutput.name,sample_cor])
-                print ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC
-                print out
+                if (not args.quiet) : print ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC
+                if (not args.quiet) : print out
                 cor+=1
                 myinput.close()
                 break
             except CalledProcessError as err:   # Thrown if files doesn't match
                 log.debug(err)
-                print ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC
-                print err.output
+                if (not args.quiet) : print ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC
+                if (not args.quiet) : print err.output
                 myinput.close()
                 break
             except OSError:
@@ -307,9 +307,7 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
                 if (diffProgram != 'diff') :
                     log.error('Falling back to diff...')
                     diffProgram = 'diff'
-                else : 
-                    myinput.close()
-                    break
+                else : break
 
     log.debug('Deleting {}'.format(sample_out))
     remove(sample_out)  # Clean the file from the DB
@@ -317,12 +315,12 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
     log.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
 
 if (cont == cor) :  # Show how many are OK from the total tested
-    print ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont)
     exit(0)     # All ok, exit = 0
 elif (cor==0):
-    print ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont)
 else :
-    print ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont)
 
 exit(cont-cor)  # Return number is equal to the number of different files
 
