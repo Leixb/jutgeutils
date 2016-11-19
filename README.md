@@ -55,7 +55,7 @@ using the `--dir` flag which accepts a comma separated list of directories to
 cehck for files, allowing to create additonal tests in another folder.
 
 ```
-testj.py myprogram.c --compiler 'gcc' --compiler-flags='-Wall,-g'
+testj.py myprogram.cpp --dir=~/DB/downloaded,~/DB/mytests
 ```
 
 You can customize the code format using regex with the `--code-regex` flag as 
