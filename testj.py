@@ -288,8 +288,8 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
         while 1:
             try:
                 if (not args.quiet) : print ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER
-                if (not args.quiet) : print myinput.read(), ansi.ENDC
                 myinput.seek(0)
+                if (not args.quiet) : print myinput.read(), ansi.ENDC
                 out  = check_output([diffProgram]+diffFlags+[myoutput.name,sample_cor])
                 if (not args.quiet) : print ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC
                 if (not args.quiet) : print out
@@ -307,7 +307,9 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
                 if (diffProgram != 'diff') :
                     log.error('Falling back to diff...')
                     diffProgram = 'diff'
-                else : break
+                else : 
+                    myinput.close()
+                    break
 
     log.debug('Deleting {}'.format(sample_out))
     remove(sample_out)  # Clean the file from the DB
@@ -315,12 +317,12 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
     log.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
 
 if (cont == cor) :  # Show how many are OK from the total tested
-    if (not args.quiet) : print ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont)
+    if (not args.quiet) : print ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC
     exit(0)     # All ok, exit = 0
 elif (cor==0):
-    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont)
+    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont), ansi.ENDC
 else :
-    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont)
+    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont), ansi.ENDC
 
 exit(cont-cor)  # Return number is equal to the number of different files
 
