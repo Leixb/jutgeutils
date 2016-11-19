@@ -277,8 +277,10 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
         myoutput = open(sample_out, 'wb')
 
         log.debug('Running program ...')
-        p = Popen(command, stdin=myinput, stdout=myoutput)
+        p = Popen(['time','-f','%E real, %U user, %S sys'] + command, stdin=myinput, stdout=myoutput,stderr=PIPE)
         returnCode = p.wait()
+        time = p.communicate()
+        if (not args.quiet) : print 'Time: ' + time[1]
 
         if returnCode: log.warning('Program returned {}'.format(returnCode))
         else : log.debug('Program returned {}'.format(returnCode))
