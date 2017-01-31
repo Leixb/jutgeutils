@@ -14,14 +14,16 @@ from a custom database.
 
 Installation
 ------------
-The installation process is quite straightforward, simply clone or download
-the script `testj.py` and install the dependencies:
+This script uses python3, so you must have it installed in your system. To
+install it use your system's package manager.  The installation process is
+quite straightforward, simply clone or download the script `testj.py` and
+install the dependencies:
 
 ```
-pip install argparse logging httplib2 bs4
+pip3 install argparse logging httplib2 bs4 httplib2
 ```
 
-Once done, you can execute the program by calling ```python testj.py```
+Once done, you can execute the program by calling ```python3 testj.py```
 
 Usage
 -----

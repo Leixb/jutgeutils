@@ -12,9 +12,9 @@ from shutil import move, rmtree
 
 
 # To get the zip file link from the web
-from urlparse import urljoin
+from urllib.parse import urljoin
 
-from urllib import urlretrieve
+from urllib.request import urlretrieve
 import httplib2 
 from bs4 import BeautifulSoup, SoupStrainer 
 
@@ -70,7 +70,7 @@ testj.py Hello_world_P68688.cpp --diff-program diff --diff-flags ,--normal
     before normal to prevent that the parser interpretes it as an arguemnt.
         '''
         )
-parser.add_argument('solution', metavar='file.cpp', type=file, 
+parser.add_argument('solution', metavar='file.cpp', type=argparse.FileType('r'), 
         help='Filename of either the source file or the compiled version of the program to check, if no code is specifyed, the filname must contain it in just before the filetype extension')
 group3 = parser.add_mutually_exclusive_group()
 group3.add_argument('-v','--verbosity', action='count', default=0,
@@ -141,7 +141,7 @@ if (name.endswith('.cpp') or args.compile or args.compiler!='g++'): # Compile th
     log.debug("File ends in .cpp")
 
     compiler = [args.compiler]
-    cppFlags=filter(None,args.compiler_flags.split(','))
+    cppFlags=list(filter(None,args.compiler_flags.split(',')))
     objectName = '_'+baseName.split('.')[0]+'.o'
     command = compiler+cppFlags+['-o',objectName,name]
 
@@ -255,7 +255,7 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
     log.info('Begining tests in directory: {}'.format(dirs))
 
     diffProgram = args.diff_program        #Default: colordiff
-    diffFlags = filter(None,args.diff_flags.split(',')) #Default: -y  (side by side)
+    diffFlags = list(filter(None,args.diff_flags.split(','))) #Default: -y  (side by side)
 
     for sample_in in glob(path+'/*.'+args.input_suffix): 
 
@@ -277,10 +277,8 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
         myoutput = open(sample_out, 'wb')
 
         log.debug('Running program ...')
-        p = Popen(['time','-f','%E real, %U user, %S sys'] + command, stdin=myinput, stdout=myoutput,stderr=PIPE)
+        p = Popen(command, stdin=myinput, stdout=myoutput,stderr=PIPE)
         returnCode = p.wait()
-        time = p.communicate()
-        if (not args.quiet) : print 'Time: ' + time[1]
 
         if returnCode: log.warning('Program returned {}'.format(returnCode))
         else : log.debug('Program returned {}'.format(returnCode))
@@ -289,19 +287,19 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
 
         while 1:
             try:
-                if (not args.quiet) : print ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER
+                if (not args.quiet) : print(ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER)
                 myinput.seek(0)
-                if (not args.quiet) : print myinput.read(), ansi.ENDC
+                if (not args.quiet) : print(myinput.read(), ansi.ENDC)
                 out  = check_output([diffProgram]+diffFlags+[myoutput.name,sample_cor])
-                if (not args.quiet) : print ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC
-                if (not args.quiet) : print out
+                if (not args.quiet) : print(ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC)
+                if (not args.quiet) : print(out.decode('UTF-8'))
                 cor+=1
                 myinput.close()
                 break
             except CalledProcessError as err:   # Thrown if files doesn't match
                 log.debug(err)
-                if (not args.quiet) : print ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC
-                if (not args.quiet) : print err.output
+                if (not args.quiet) : print(ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC)
+                if (not args.quiet) : print(err.output.decode('UTF-8'))
                 myinput.close()
                 break
             except OSError:
@@ -319,12 +317,12 @@ for dbFolder_unex in args.dir.split(','):  # Loop through folders
     log.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
 
 if (cont == cor) :  # Show how many are OK from the total tested
-    if (not args.quiet) : print ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print(ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC)
     exit(0)     # All ok, exit = 0
 elif (cor==0):
-    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print(ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont), ansi.ENDC)
 else :
-    if (not args.quiet) : print ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont), ansi.ENDC
+    if (not args.quiet) : print(ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont), ansi.ENDC)
 
 exit(cont-cor)  # Return number is equal to the number of different files
 
