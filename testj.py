@@ -10,32 +10,8 @@ from os.path import basename,expanduser,isdir
 from os import remove,makedirs
 from shutil import move, rmtree
 
-
-# To get the zip file link from the web
-from urllib.parse import urljoin
-
-from urllib.request import urlretrieve
-import httplib2 
-from bs4 import BeautifulSoup, SoupStrainer 
-
-# To extract the Zip file
-from zipfile import ZipFile
-
-from glob import glob   # To check all sample files
-
 # Call compiler, program and diff
 from subprocess import Popen, PIPE, check_output,CalledProcessError
-
-# ANSI color sequences
-class ansi:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    ENDC = '\033[0m'
 
 # Parser options
 
@@ -183,149 +159,33 @@ else:
 
 log.debug('code = '+str(code))
 
-cont,cor,dirs = 0,0,0  # Count the number of sample files and the number of correct ones
+import test
+import download
 
-for dbFolder_unex in args.dir.split(','):  # Loop through folders
+web =args.webpage+'/'+code
+soup = download.downloadHTML(web)
+print("Name: {}".format(download.getName(soup)))
+print("txt: {}".format(download.getTxt(soup)))
 
-    dbFolder=expanduser(dbFolder_unex)
-    path = dbFolder+'/'+code
+diffProgram = args.diff_program        #Default: colordiff
+diffFlags = list(filter(None,args.diff_flags.split(','))) #Default: -y  (side by side)
 
-    dirs+=1 # Increase dir count
+dbFolder = expanduser(args.dir.split(',')[0])
+folders = [expanduser(i)+'/'+code for i in args.dir.split(',')]
+mainFolder = folders[0]
 
-    log.debug(path)
+if(not isdir(dbFolder)): makedirs(dbFolder) # Create DB folder
 
-    if (not isdir(path) or args.force_download): 
-        # If folder is not in the DB, download it. (Only if first folder)
+# If folder is not in the DB, download it. (Only if first folder)
+if (not isdir(mainFolder) or args.force_download): 
 
-        if(not isdir(dbFolder)): makedirs(dbFolder) # Create DB folder
+    log.warning('Main folder not found, proceeding to download')
 
-        if (args.no_download):
-            log.error('Test folder not found, skipping...')
-            continue # If doesn't exist, try next
+    web =args.webpage+'/'+code
+    soup = download.downloadHTML(web)
+    download.downloadZIP(soup,web,dbFolder,code,args.force_download)
 
-        if (dirs==1 or args.download_all):
-
-            log.debug('Downloading HTML to extract link to the zip file')
-            web=args.webpage+'/'+code
-
-            # The download method and extraction is specific to the jutge.org problems,
-            # so there should be changed to be used with other servers.
-
-            # Get html of problem and find the link to the zip file
-            http = httplib2.Http()
-            status, response = http.request(web)
-            soup = BeautifulSoup(response,'lxml', parse_only=SoupStrainer('a'))
-
-            log.debug('Got HTML soup = {}'.format(soup))
-
-            for a in soup.find_all('a', href=True):
-                if (basename(a['href'])=='zip'):
-                    zipUrl = urljoin(web,a['href'])
-                    log.debug('Link found: ' + zipUrl)
-                    break # Link found, break
-
-            log.debug('Downloading ZIP form {} ...'.format(zipUrl))
-
-            zipFileName = code + '.zip'
-
-            urlretrieve(zipUrl, zipFileName) 
-
-            zip_data = ZipFile(zipFileName, 'r')
-
-            log.debug('Extracting ZIP from {} to {} ...'.format(zipFileName,dbFolder))
-
-            # Note that this relies on the zip cointaining a main folder of the form P0000_ca
-            zip_data.extractall(dbFolder) 
-            zip_data.close()
-            
-            log.debug('Deleting ZIP file {} ...'.format(zipFileName))
-
-            remove(zipFileName) # Delete file once extracted
-
-            # Move folder of the form P00001_ca to P00001
-            if (args.force_download) : rmtree(dbFolder+'/'+code) # Delete previous contents
-            move(dbFolder+'/'+zipUrl.split('/')[-2],dbFolder+'/'+code)
-
-            log.info('ZIP file downloaded')
-
-    elif (not isdir(path)) :
-        log.warning("path {} not found!".format(path)) # Only download if it is the first folder specified
-        continue
-
-    log.info('Begining tests in directory: {}'.format(dirs))
-
-    diffProgram = args.diff_program        #Default: colordiff
-    diffFlags = list(filter(None,args.diff_flags.split(','))) #Default: -y  (side by side)
-
-    for sample_in in glob(path+'/*.'+args.input_suffix): 
-
-        cont+=1
-
-        sample_cor = sample_in.split('.')
-        sample_cor.pop()
-        sample_cor = ''.join(sample_cor)+'.'+args.output_suffix
-        sample_out = path+'/sample_tmp.out'
-
-        log.debug('Sampe file = {}'.format(sample_in))
-        log.debug('Correct file = {}'.format(sample_cor))
-        log.debug('Output file = {}'.format(sample_out))
-
-        log.debug('Opening {}'.format(sample_in))
-        myinput = open(sample_in,'r');
-
-        log.debug('Opening {}'.format(sample_out))
-        myoutput = open(sample_out, 'wb')
-
-        log.debug('Running program ...')
-        p = Popen(command, stdin=myinput, stdout=myoutput,stderr=PIPE)
-        returnCode = p.wait()
-
-        if returnCode: log.warning('Program returned {}'.format(returnCode))
-        else : log.debug('Program returned {}'.format(returnCode))
-
-        myoutput.close()
-
-        while 1:
-            try:
-                if (not args.quiet) : print(ansi.OKBLUE, ansi.BOLD, '*** Input {}'.format(cont), ansi.ENDC, ansi.HEADER)
-                myinput.seek(0)
-                if (not args.quiet) : print(myinput.read(), ansi.ENDC)
-                out  = check_output([diffProgram]+diffFlags+[myoutput.name,sample_cor])
-                if (not args.quiet) : print(ansi.OKGREEN, ansi.BOLD, '*** The results match :)', ansi.ENDC, ansi.ENDC)
-                if (not args.quiet) : print(out.decode('UTF-8'))
-                cor+=1
-                myinput.close()
-                break
-            except CalledProcessError as err:   # Thrown if files doesn't match
-                log.debug(err)
-                if (not args.quiet) : print(ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC)
-                if (not args.quiet) : print(err.output.decode('UTF-8'))
-                myinput.close()
-                break
-            except OSError:
-                log.error('Program {} not found, is it installed? \n Falling back to diff...'.format(diffProgram))
-                if (diffProgram != 'diff') :
-                    log.error('Falling back to diff...')
-                    diffProgram = 'diff'
-                else : 
-                    myinput.close()
-                    break
-
-    log.debug('Deleting {}'.format(sample_out))
-    remove(sample_out)  # Clean the file from the DB
-
-    log.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
-
-if (cont == cor) :  # Show how many are OK from the total tested
-    if (not args.quiet) : print(ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC)
-    exit(0)     # All ok, exit = 0
-elif (cor==0):
-    if (not args.quiet) : print(ansi.BOLD, ansi.FAIL, ansi.UNDERLINE, 'ALL tests FAILED. ({}/{})'.format(cor,cont), ansi.ENDC)
-else :
-    if (not args.quiet) : print(ansi.BOLD, ansi.FAIL, 'Correct: {} out of {}'.format(cor,cont), ansi.ENDC)
+[cor,cont] = test.test(folders,command,diffProgram,diffFlags,args.input_suffix,args.output_suffix,args.quiet)
 
 exit(cont-cor)  # Return number is equal to the number of different files
-
-
-
 
