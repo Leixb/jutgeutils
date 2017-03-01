@@ -1,4 +1,5 @@
 import logging as log
+from tempfile import NamedTemporaryFile
 
 # To get the zip file link from the web
 from urllib.parse import urljoin
@@ -44,14 +45,21 @@ def downloadHTML(web):
     return soup
 
 def getName (soup):
-   name = soup.find('h1',class_='my-trim') 
+   name = soup.find('h1',class_='my-trim') # Get problem title from html tag
    return name.contents[0]
 
 def getTxt (soup):
-    txt = soup.find('div',id="txt").find_all('p')[1:-1]
-    txt = [j.contents for i in txt for j in i.contents]
-    # return txt
-    return "\n".join(txt)
+    # Find statements in html. First paragraph removed cause it contains junk
+    txt = soup.find('div',id="txt").find_all('p')[1:] 
+
+    # Merge into a plain html string
+    txt = " ".join([str(i) for i in txt])
+
+    # Convert html to plain text using pandoc
+    import pypandoc
+    txt = pypandoc.convert_text(txt,'plain','html')
+
+    return txt
 
 def downloadZIP (soup,web,dbFolder,code,force_download=False):
     for a in soup.find_all('a', href=True):
@@ -62,7 +70,9 @@ def downloadZIP (soup,web,dbFolder,code,force_download=False):
 
     log.debug('Downloading ZIP form {} ...'.format(zipUrl))
 
-    zipFileName = code + '.zip'
+    # Download ZIP into temporary file
+    zipFile = NamedTemporaryFile('w+')
+    zipFileName = zipFile.name
 
     urlretrieve(zipUrl, zipFileName) 
 
@@ -73,10 +83,6 @@ def downloadZIP (soup,web,dbFolder,code,force_download=False):
     # Note that this relies on the zip cointaining a main folder of the form P0000_ca
     zip_data.extractall(dbFolder) 
     zip_data.close()
-
-    log.debug('Deleting ZIP file {} ...'.format(zipFileName))
-
-    remove(zipFileName) # Delete file once extracted
 
     # Move folder of the form P00001_ca to P00001
     if (force_download) : rmtree(dbFolder+'/'+code) # Delete previous contents
