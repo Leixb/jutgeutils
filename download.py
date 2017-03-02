@@ -22,6 +22,7 @@ from zipfile import ZipFile
 class download:
 
     def __init__(self,code,dbFolder,remaining,verbosity,quiet):
+
         if verbosity >= 3:
             log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
             log.info("Debug output.")
@@ -36,8 +37,10 @@ class download:
             log.info("Quiet output.")
         else:
             log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+
         self.code = code
         self.dbFolder = dbFolder
+
         parser = argparse.ArgumentParser(
             description='Download options'
         )
@@ -46,8 +49,11 @@ class download:
         parser.add_argument('--force-download', action='store_true',
                 help='Force download of the tests from the server and save it to the database folder', default=0)
         args = parser.parse_args(remaining)
+
         self.web = '{}/{}'.format(args.webpage,code)
         self.force_download=args.force_download
+
+        self.download()
 
     def download (self):
         log.debug('Downloading HTML')
@@ -73,7 +79,7 @@ class download:
 
         log.debug('Downloading ZIP form {} ...'.format(zipUrl))
 
-        zipFileName, trash = urlretrieve(zipUrl)
+        zipFileName = urlretrieve(zipUrl)[0]
 
         zip_data = ZipFile(zipFileName, 'r')
 
