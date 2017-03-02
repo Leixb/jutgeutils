@@ -2,7 +2,7 @@
 
 import argparse
 
-import logging as log
+import logging 
 
 # OS utilities
 import re
@@ -38,19 +38,19 @@ args, remaining = parser.parse_known_args()
 # For verbosity
 
 if args.verbosity >= 3:
-    log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
-    log.info("Debug output.")
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
+    logging.info("Debug output.")
 elif args.verbosity == 2:
-    log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
-    log.info("More Verbose output.")
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+    logging.info("More Verbose output.")
 elif args.verbosity == 1:
-    log.basicConfig(format="%(levelname)s: %(message)s", level=log.WARNING)
-    log.info("Verbose output.")
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
+    logging.info("Verbose output.")
 # elif args.quiet:
-    # log.basicConfig(format="%(levelname)s: %(message)s", level=log.CRITICAL)
-    # log.info("Quiet output.")
+    # logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.CRITICAL)
+    # logging.info("Quiet output.")
 else:
-    log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.ERROR)
 
 command = args.command
 
@@ -63,21 +63,21 @@ db_folder = expanduser(args.dir)
 files=[0]
 
 if args.code: 
-    log.debug('Code Specified')
+    logging.debug('Code Specified')
 elif args.solution: 
-    log.debug('Solution')
+    logging.debug('Solution')
     files = args.solution
 
-log.debug(args.solution)
+logging.debug(args.solution)
 
-log.debug("files = ")
-log.debug(files)
+logging.debug("files = ")
+logging.debug(files)
 
-log.debug('code_regex = {}'.format(code_regex))
+logging.debug('code_regex = {}'.format(code_regex))
 
 for prog in files:
 
-    log.debug(prog.name)
+    logging.debug(prog.name)
 
     if not args.code :
         base_name = basename(prog.name)
@@ -98,13 +98,13 @@ for prog in files:
         get.get(command,code,db_folder,remaining,verbosity,quiet)
     elif command == 'test':
         if prog == 0:
-            log.error('No file found, aborting')
+            logging.error('No file found, aborting')
             exit(-1)
         # Compile if CPP file
         if prog.name.endswith('.cpp'):
 
-            log.info('Compiling...')
-            log.debug('Running command: ' + ' '.join(command))
+            logging.info('Compiling...')
+            logging.debug('Running command: ' + ' '.join(command))
 
             compile_to = '_' + basename(prog.name).split('.')[0]
 
@@ -113,11 +113,11 @@ for prog in files:
             eCode = proc.wait()
 
             if(eCode): # Check if compilation failed
-                log.error(err)
-                log.error('Compilation failed, compiler returned code: {}'.format(eCode))
+                logging.error(err)
+                logging.error('Compilation failed, compiler returned code: {}'.format(eCode))
                 exit(25)
             else:
-                log.info('Compiled')
+                logging.info('Compiled')
 
             executable = ['./'+compile_to]
         else: executable = prog.name
@@ -125,7 +125,10 @@ for prog in files:
         test.test(executable,code,db_folder,remaining,verbosity,quiet)
     elif command == 'addcases':
         pass
-        # import addCases
+        import add_cases
+        remaining = args.solution[1:] + remaining
+        add_cases.addcases(code,db_folder,remaining,verbosity,quiet)
+        exit(0)
     else:
         print("Error, invalid command")
         exit(2)

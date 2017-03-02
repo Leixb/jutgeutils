@@ -1,4 +1,4 @@
-import logging as log
+import logging 
 
 import argparse
 
@@ -25,19 +25,19 @@ class test:
     def __init__ (self,command,code,db_folder,remaining,verbosity,quiet):
 
         if verbosity >= 3:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
-            log.info("Debug output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
+            logging.info("Debug output.")
         elif verbosity == 2:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
-            log.info("More Verbose output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+            logging.info("More Verbose output.")
         elif verbosity == 1:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.WARNING)
-            log.info("Verbose output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
+            logging.info("Verbose output.")
         elif quiet:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.CRITICAL)
-            log.info("Quiet output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.CRITICAL)
+            logging.info("Quiet output.")
         else:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.ERROR)
 
         self.command = command
         self.code = code
@@ -75,13 +75,13 @@ class test:
 
         dirs+=1 # Increase dir count
 
-        log.info('Begining tests in directory: {}'.format(dirs))
+        logging.info('Begining tests in directory: {}'.format(dirs))
 
         for sample_in in glob(path+'/*.'+self.input_suffix): 
 
             if basename(sample_in).startswith('custom') :
                 if not self.use_custom: 
-                    log.debug('Skipping custom test {}'.format(sample_in))
+                    logging.debug('Skipping custom test {}'.format(sample_in))
                     continue
 
             cont+=1
@@ -90,23 +90,23 @@ class test:
             sample_cor.pop()
             sample_cor = ''.join(sample_cor)+'.'+self.output_suffix
 
-            log.debug('Sample file = {}'.format(sample_in))
-            log.debug('Correct file = {}'.format(sample_cor))
+            logging.debug('Sample file = {}'.format(sample_in))
+            logging.debug('Correct file = {}'.format(sample_cor))
 
-            log.debug('Opening {}'.format(sample_in))
+            logging.debug('Opening {}'.format(sample_in))
             myinput = open(sample_in,'r');
 
-            log.debug('Creating temp output file')
+            logging.debug('Creating temp output file')
 
 
             myoutput = NamedTemporaryFile()
 
-            log.debug('Running command {} <{} >{} ...'.format(self.command,myinput.name,myoutput.name))
+            logging.debug('Running command {} <{} >{} ...'.format(self.command,myinput.name,myoutput.name))
             p = Popen(self.command, stdin=myinput, stdout=myoutput,stderr=PIPE)
             returnCode = p.wait()
 
-            if returnCode: log.warning('Program returned {}'.format(returnCode))
-            else : log.debug('Program returned {}'.format(returnCode))
+            if returnCode: logging.warning('Program returned {}'.format(returnCode))
+            else : logging.debug('Program returned {}'.format(returnCode))
 
 
             while 1:
@@ -121,15 +121,15 @@ class test:
                     myinput.close()
                     break
                 except CalledProcessError as err:   # Thrown if files doesn't match
-                    log.debug(err)
+                    logging.debug(err)
                     if (not self.quiet) : print(ansi.FAIL, ansi.BOLD, '*** The results do NOT match :(', ansi.ENDC, ansi.ENDC)
                     if (not self.quiet) : print(err.output.decode('UTF-8'))
                     myinput.close()
                     break
                 except OSError:
-                    log.error('Program {} not found, is it installed? \n Falling back to diff...'.format(self.diff_program))
+                    logging.error('Program {} not found, is it installed? \n Falling back to diff...'.format(self.diff_program))
                     if (self.diff_program != 'diff') :
-                        log.error('Falling back to diff...')
+                        logging.error('Falling back to diff...')
                         self.diff_program = 'diff'
                     else : 
                         myinput.close()
@@ -137,7 +137,7 @@ class test:
 
             myoutput.close()
 
-        log.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
+        logging.debug('dirs = {};\t cont = {};\t cor = {}'.format(dirs,cont,cor))
 
         if (cont == cor) :  # Show how many are OK from the total tested
             if (not self.quiet) : print(ansi.BOLD, ansi.OKGREEN, 'All correct. ({}/{})'.format(cor,cont), ansi.ENDC)

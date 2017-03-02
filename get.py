@@ -1,6 +1,6 @@
 import argparse
 
-import logging as log
+import logging 
 
 from bs4 import BeautifulSoup
 
@@ -11,19 +11,19 @@ class get:
     def __init__(self,command,code,dbFolder,remaining,verbosity,quiet):
 
         if verbosity >= 3:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
-            log.info("Debug output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
+            logging.info("Debug output.")
         elif verbosity == 2:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
-            log.info("More Verbose output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+            logging.info("More Verbose output.")
         elif verbosity == 1:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.WARNING)
-            log.info("Verbose output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
+            logging.info("Verbose output.")
         elif quiet:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.CRITICAL)
-            log.info("Quiet output.")
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.CRITICAL)
+            logging.info("Quiet output.")
         else:
-            log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+            logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.ERROR)
 
         parser = argparse.ArgumentParser(
             description='Download options'
@@ -55,7 +55,7 @@ class get:
         elif command == 'getsamples':
             print(self.printSamples())
         else:
-            log.error('Error, invalid command')
+            logging.error('Error, invalid command')
 
     def getName (self):
         name = self.soup.find('h1',class_='my-trim') # Get problem title from html tag
