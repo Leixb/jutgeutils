@@ -85,8 +85,9 @@ for prog in files:
         # download.downloadHTML(web)
         # print(download.getSoup())
         # download.downloadToDB(web,dbFolder,code,force_download)
-    elif command == 'get':
+    elif command.startswith('get'):
         import get
+        get.get(command,code,dbFolder,remaining,verbosity,quiet)
     elif command == 'test':
         import test
     elif command == 'addCases':
