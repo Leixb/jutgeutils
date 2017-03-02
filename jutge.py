@@ -6,7 +6,7 @@ import logging as log
 
 # OS utilities
 import re
-from os.path import basename,expanduser,isdir
+from os.path import basename,expanduser,isdir,abspath
 from os import remove,makedirs
 from shutil import move, rmtree
 
@@ -57,20 +57,32 @@ command = args.command
 code = args.code
 quiet = args.quiet
 verbosity = args.verbosity
-codeRegex = '(' + args.code_regex + ')'
-dbFolder = expanduser(args.dir)
+code_regex = '(' + args.code_regex + ')'
+db_folder = expanduser(args.dir)
 
-if args.code: files = [0]
-elif args.solution: files = args.solution
+files=[0]
 
-print(codeRegex)
+if args.code: 
+    log.debug('Code Specified')
+elif args.solution: 
+    log.debug('Solution')
+    files = args.solution
+
+log.debug(args.solution)
+
+log.debug("files = ")
+log.debug(files)
+
+log.debug('code_regex = {}'.format(code_regex))
 
 for prog in files:
 
+    log.debug(prog.name)
+
     if not args.code :
-        baseName = basename(prog.name)
+        base_name = basename(prog.name)
         try:
-            code = re.search(codeRegex,baseName).group(1)
+            code = re.search(code_regex,base_name).group(1)
         except AttributeError:
             print('Code not found')
             exit(26)    # Without code, we cannot check the cases, so exit
@@ -80,105 +92,42 @@ for prog in files:
 
     if command == 'download':
         import download
-        inst = download.download(code,dbFolder,remaining,verbosity,quiet)
-        inst.download()
-        # download.downloadHTML(web)
-        # print(download.getSoup())
-        # download.downloadToDB(web,dbFolder,code,force_download)
+        download.download(code,db_folder,remaining,verbosity,quiet)
     elif command.startswith('get'):
         import get
-        get.get(command,code,dbFolder,remaining,verbosity,quiet)
+        get.get(command,code,db_folder,remaining,verbosity,quiet)
     elif command == 'test':
+        if prog == 0:
+            log.error('No file found, aborting')
+            exit(-1)
+        # Compile if CPP file
+        if prog.name.endswith('.cpp'):
+
+            log.info('Compiling...')
+            log.debug('Running command: ' + ' '.join(command))
+
+            compile_to = '_' + basename(prog.name).split('.')[0]
+
+            proc = Popen(['g++','-g',prog.name,'-o',compile_to], stdout=PIPE, stderr=PIPE)
+            out, err = proc.communicate()
+            eCode = proc.wait()
+
+            if(eCode): # Check if compilation failed
+                log.error(err)
+                log.error('Compilation failed, compiler returned code: {}'.format(eCode))
+                exit(25)
+            else:
+                log.info('Compiled')
+
+            executable = ['./'+compile_to]
+        else: executable = prog.name
         import test
-    elif command == 'addCases':
-        import addCases
+        test.test(executable,code,db_folder,remaining,verbosity,quiet)
+    elif command == 'addcases':
+        pass
+        # import addCases
     else:
         print("Error, invalid command")
         exit(2)
 
 exit(0)
-
-name = args.solution.name
-baseName = basename(name)
-command = ['./'+name]
-
-log.debug(args)
-log.debug("Name = " + name)
-
-if (name.endswith('.cpp') or args.compile or args.compiler!='g++'): # Compile the program if the file is a .cpp
-    
-    log.debug("File ends in .cpp")
-
-    compiler = [args.compiler]
-    cppFlags=list(filter(None,args.compiler_flags.split(',')))
-    objectName = '_'+baseName.split('.')[0]+'.o'
-    command = compiler+cppFlags+['-o',objectName,name]
-
-    if (not args.no_compile): 
-
-        log.info('Compiling...')
-        log.debug('Running command: ' + ' '.join(command))
-
-        proc = Popen(command, stdout=PIPE, stderr=PIPE)
-        out, err = proc.communicate()
-        eCode = proc.wait()
-
-        if(eCode): # Check if compilation failed
-            log.error(err)
-            log.error('Compilation failed, compiler returned code: {}'.format(eCode))
-            exit(25)
-        else:
-            log.info('Compiled')
-
-    command = ['./'+objectName]
-
-codeRegex = '('+args.code_regex+')' # Used to get the code from the end of the filename
-
-log.debug('codeRegex = {}'.format(codeRegex))
-
-if (args.code): 
-    code = args.code
-    try:
-        code2 = re.search(codeRegex,code).group(1)
-        if (code != code2): log.warning('Provided code doesn\'t match regex')
-    except AttributeError:
-        log.warning('Provided code doesn\'t match regex') # Do not exit if code is manually specified
-else:
-    try:
-        code = re.search(codeRegex,baseName).group(1)
-    except AttributeError:
-        log.error('Code not found')
-        exit(26)    # Without code, we cannot check the cases, so exit
-
-log.debug('code = '+str(code))
-
-import test
-import download
-
-web =args.webpage+'/'+code
-soup = download.downloadHTML(web)
-print("Name: {}".format(download.getName(soup)))
-print("txt: {}".format(download.getTxt(soup)))
-
-diffProgram = args.diff_program        #Default: colordiff
-diffFlags = list(filter(None,args.diff_flags.split(','))) #Default: -y  (side by side)
-
-dbFolder = expanduser(args.dir.split(',')[0])
-folders = [expanduser(i)+'/'+code for i in args.dir.split(',')]
-mainFolder = folders[0]
-
-if(not isdir(dbFolder)): makedirs(dbFolder) # Create DB folder
-
-# If folder is not in the DB, download it. (Only if first folder)
-if (not isdir(mainFolder) or args.force_download): 
-
-    log.warning('Main folder not found, proceeding to download')
-
-    web =args.webpage+'/'+code
-    soup = download.downloadHTML(web)
-    download.downloadZIP(soup,web,dbFolder,code,args.force_download)
-
-[cor,cont] = test.test(folders,command,diffProgram,diffFlags,args.input_suffix,args.output_suffix,args.quiet)
-
-exit(cont-cor)  # Return number is equal to the number of different files
-
