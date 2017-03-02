@@ -121,6 +121,10 @@ for prog in files:
 
             executable = ['./'+compile_to]
         else: executable = prog.name
+        # if no DB folder, try to download test cases
+        if not isdir('{}/{}'.format(db_folder,code)):
+            import download
+            download.download(code,db_folder,remaining,verbosity,quiet)
         import test
         test.test(executable,code,db_folder,remaining,verbosity,quiet)
     elif command == 'addcases':
