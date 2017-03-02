@@ -2,7 +2,7 @@ import logging
 
 import argparse
 
-from shutil import copyfile
+import sys
 
 class addcases:
 
@@ -29,9 +29,9 @@ class addcases:
         parser = argparse.ArgumentParser(
             description='addcases options'
         )
-        parser.add_argument('-i','--input-file', metavar='input.cpp', type=argparse.FileType('r'), 
+        parser.add_argument('-i','--input-file', metavar='input.cpp', type=argparse.FileType('r'), default=sys.stdin,
                 help='Input file')
-        parser.add_argument('-o','--output-file', metavar='output.cpp', type=argparse.FileType('r'), 
+        parser.add_argument('-o','--output-file', metavar='output.cpp', type=argparse.FileType('r'), default=sys.stdin,
                 help='Output file')
         parser.add_argument('-n', '--number', metavar='n', type=int, default = 0,
                 help='Number of file')
@@ -41,8 +41,10 @@ class addcases:
             help='Specify the suffix of the correct output files', default='cor')
         args = parser.parse_args(remaining)
 
-        src_inp = args.input_file.name
-        src_cor = args.output_file.name
+        if args.input_file == sys.stdin: print('Enter input:')
+        src_inp = args.input_file.read()
+        if args.output_file == sys.stdin: print('Enter output:')
+        src_cor = args.output_file.read()
 
         output_suffix = args.output_suffix
         input_suffix = args.input_suffix
@@ -55,6 +57,6 @@ class addcases:
         dest_inp = dest + '.' + input_suffix
         dest_cor = dest + '.' + output_suffix
 
-        copyfile(src_inp,dest_inp)
-        copyfile(src_cor,dest_cor)
+        open(dest_inp,'w').write(src_inp)
+        open(dest_cor,'w').write(src_cor)
 
