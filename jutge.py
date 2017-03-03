@@ -80,15 +80,18 @@ for prog in files:
     logging.debug(prog.name)
 
     if not args.code :
+        logging.debug("No code provided, searching in file")
         base_name = basename(prog.name)
         try:
             code = re.search(code_regex,base_name).group(1)
+            logging.debug(re.search(code_regex,base_name))
         except AttributeError:
             print('Code not found')
             exit(26)    # Without code, we cannot check the cases, so exit
     else:
         print('Error, no code found')
         exit(26)
+    logging.debug("code = {}".format(code))
 
     if command == 'download':
         import download
