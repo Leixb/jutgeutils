@@ -107,7 +107,6 @@ for prog in files:
         if prog.name.endswith('.cpp'):
 
             logging.info('Compiling...')
-            logging.debug('Running command: ' + ' '.join(command))
 
             compile_to = '_' + basename(prog.name).split('.')[0]
 
@@ -127,7 +126,7 @@ for prog in files:
         # if no DB folder, try to download test cases
         if not isdir('{}/{}'.format(db_folder,code)):
             import download
-            download.download(code,db_folder,remaining,verbosity,quiet)
+            download.download(code,db_folder,[],verbosity,quiet)
         import test
         test.test(executable,code,db_folder,remaining,verbosity,quiet)
     elif command == 'addcases':
