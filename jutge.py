@@ -77,7 +77,6 @@ logging.debug('code_regex = {}'.format(code_regex))
 
 for prog in files:
 
-
     if not args.code :
 
         logging.debug(prog.name)
@@ -90,9 +89,7 @@ for prog in files:
         except AttributeError:
             print('Code not found')
             exit(26)    # Without code, we cannot check the cases, so exit
-    else:
-        print('Error, no code found')
-        exit(26)
+
     logging.debug("code = {}".format(code))
 
     if command == 'download':
