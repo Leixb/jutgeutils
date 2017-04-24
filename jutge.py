@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
         description='Utility to test programms against jutge.org sample cases'
         )
 parser.add_argument('command', metavar='command', type=str, 
-        help='Script command to run (download, test, get, addCases)')
+        help='Script command to run (download, test, getname, getstatement, getcode, getsamples, addCases)')
 parser.add_argument('-c','--code',type=str,
         help='code of the problem to check')
 parser.add_argument('-v','--verbosity', action='count', default=0,
