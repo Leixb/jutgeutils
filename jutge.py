@@ -77,9 +77,11 @@ logging.debug('code_regex = {}'.format(code_regex))
 
 for prog in files:
 
-    logging.debug(prog.name)
 
     if not args.code :
+
+        logging.debug(prog.name)
+
         logging.debug("No code provided, searching in file")
         base_name = basename(prog.name)
         try:
