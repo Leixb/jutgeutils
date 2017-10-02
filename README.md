@@ -1,3 +1,7 @@
+# This project has been deprecated in favor of [jutge_cli](https://githu.bom/Leixb/jutge_cli)
+
+---
+
 Jutge.org test samples
 ======================
 
