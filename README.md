@@ -1,4 +1,4 @@
-# This project has been deprecated in favor of [jutge_cli](https://githu.bom/Leixb/jutge_cli)
+# This project has been deprecated in favor of [jutge_cli](https://github.com/Leixb/jutge_cli)
 
 ---
 
